@@ -1,19 +1,159 @@
 package com.example.nepalicalendar
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.graphics.Color
 import android.widget.RemoteViews
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class NepaliCalendarWidget : AppWidgetProvider() {
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        for (appWidgetId in appWidgetIds) {
-            val views = RemoteViews(context.packageName, R.layout.nepali_calendar_widget)
+
+    companion object {
+        const val ACTION_PREV_MONTH = "com.example.nepalicalendar.PREV_MONTH"
+        const val ACTION_NEXT_MONTH = "com.example.nepalicalendar.NEXT_MONTH"
+        const val ACTION_RESET_TODAY = "com.example.nepalicalendar.RESET_TODAY"
+        const val ACTION_SELECT_DATE = "com.example.nepalicalendar.SELECT_DATE"
+
+        private val cellIds = intArrayOf(
+            R.id.cell_0, R.id.cell_1, R.id.cell_2, R.id.cell_3, R.id.cell_4, R.id.cell_5, R.id.cell_6,
+            R.id.cell_7, R.id.cell_8, R.id.cell_9, R.id.cell_10, R.id.cell_11, R.id.cell_12, R.id.cell_13,
+            R.id.cell_14, R.id.cell_15, R.id.cell_16, R.id.cell_17, R.id.cell_18, R.id.cell_19, R.id.cell_20,
+            R.id.cell_21, R.id.cell_22, R.id.cell_23, R.id.cell_24, R.id.cell_25, R.id.cell_26, R.id.cell_27,
+            R.id.cell_28, R.id.cell_29, R.id.cell_30, R.id.cell_31, R.id.cell_32, R.id.cell_33, R.id.cell_34,
+            R.id.cell_35, R.id.cell_36, R.id.cell_37, R.id.cell_38, R.id.cell_39, R.id.cell_40, R.id.cell_41
+        )
+
+        fun updateAllWidgets(context: Context) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val componentName = ComponentName(context, NepaliCalendarWidget::class.java)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+            for (id in appWidgetIds) {
+                updateAppWidget(context, appWidgetManager, id)
+            }
+        }
+
+        fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+            val prefs = context.getSharedPreferences("NepaliWidgetPrefs", Context.MODE_PRIVATE)
+            val monthOffset = prefs.getInt("month_offset", 0)
+            val selectedDate = prefs.getString("selected_date", "") ?: ""
+
+            val views = RemoteViews(context.packageName, R.layout.layout_transparent_dock)
+
+            val todayCal = Calendar.getInstance()
+            val displayCal = Calendar.getInstance().apply {
+                add(Calendar.MONTH, monthOffset)
+            }
+
+            val monthTitle = SimpleDateFormat("MMMM yyyy", Locale.US).format(displayCal.time).uppercase()
+            views.setTextViewText(R.id.tv_month_year, monthTitle)
+
+            views.setOnClickPendingIntent(R.id.btn_prev_month, getActionIntent(context, ACTION_PREV_MONTH, 1))
+            views.setOnClickPendingIntent(R.id.btn_next_month, getActionIntent(context, ACTION_NEXT_MONTH, 2))
+            views.setOnClickPendingIntent(R.id.tv_month_year, getActionIntent(context, ACTION_RESET_TODAY, 3))
+
+            val tempCal = displayCal.clone() as Calendar
+            tempCal.set(Calendar.DAY_OF_MONTH, 1)
+            val firstDayOfWeek = tempCal.get(Calendar.DAY_OF_WEEK) - 1
+            val maxDaysInMonth = tempCal.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+            val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val todayStr = dateFormatter.format(todayCal.time)
+
+            for (i in 0 until 42) {
+                val cellId = cellIds[i]
+                if (i < firstDayOfWeek || i >= firstDayOfWeek + maxDaysInMonth) {
+                    views.setTextViewText(cellId, "")
+                    views.setInt(cellId, "setBackgroundResource", 0)
+                } else {
+                    val day = i - firstDayOfWeek + 1
+                    tempCal.set(Calendar.DAY_OF_MONTH, day)
+                    val dateStr = dateFormatter.format(tempCal.time)
+                    val festival = FestivalData.festivals.find { it.date == dateStr }
+                    val isToday = (dateStr == todayStr)
+
+                    views.setTextViewText(cellId, day.toString())
+                    views.setTextColor(cellId, if (festival != null) Color.parseColor("#FFD700") else Color.WHITE)
+                    views.setInt(cellId, "setBackgroundResource", if (isToday) R.drawable.circle_today else 0)
+
+                    val selectIntent = Intent(context, NepaliCalendarWidget::class.java).apply {
+                        action = ACTION_SELECT_DATE
+                        putExtra("date_str", dateStr)
+                        putExtra("day_num", day)
+                    }
+                    val pendingSelect = PendingIntent.getBroadcast(
+                        context, 100 + i, selectIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    views.setOnClickPendingIntent(cellId, pendingSelect)
+                }
+            }
+
+            val activeDateStr = if (selectedDate.isNotEmpty()) selectedDate else if (monthOffset == 0) todayStr else ""
+            if (activeDateStr.isNotEmpty()) {
+                val fest = FestivalData.festivals.find { it.date == activeDateStr }
+                val dayPart = activeDateStr.takeLast(2).toIntOrNull() ?: 1
+                val prefix = if (activeDateStr == todayStr) "TODAY ($dayPart)" else "Date $dayPart"
+                if (fest != null) {
+                    views.setTextViewText(R.id.tv_active_festival, "$prefix: ${fest.name}")
+                    views.setTextViewText(R.id.tv_active_desc, fest.details)
+                } else {
+                    views.setTextViewText(R.id.tv_active_festival, prefix)
+                    views.setTextViewText(R.id.tv_active_desc, "No major Nepali festival on this date")
+                }
+            } else {
+                views.setTextViewText(R.id.tv_active_festival, monthTitle)
+                views.setTextViewText(R.id.tv_active_desc, "Tap any date to check festival details")
+            }
+
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+        private fun getActionIntent(context: Context, actionName: String, reqCode: Int): PendingIntent {
+            val intent = Intent(context, NepaliCalendarWidget::class.java).apply {
+                action = actionName
+            }
+            return PendingIntent.getBroadcast(
+                context, reqCode, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+    }
+
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        for (appWidgetId in appWidgetIds) {
+            updateAppWidget(context, appWidgetManager, appWidgetId)
+        }
+    }
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        val prefs = context.getSharedPreferences("NepaliWidgetPrefs", Context.MODE_PRIVATE)
+        when (intent.action) {
+            ACTION_PREV_MONTH -> {
+                val current = prefs.getInt("month_offset", 0)
+                prefs.edit().putInt("month_offset", current - 1).putString("selected_date", "").apply()
+                updateAllWidgets(context)
+            }
+            ACTION_NEXT_MONTH -> {
+                val current = prefs.getInt("month_offset", 0)
+                prefs.edit().putInt("month_offset", current + 1).putString("selected_date", "").apply()
+                updateAllWidgets(context)
+            }
+            ACTION_RESET_TODAY -> {
+                prefs.edit().putInt("month_offset", 0).putString("selected_date", "").apply()
+                updateAllWidgets(context)
+            }
+            ACTION_SELECT_DATE -> {
+                val dateStr = intent.getStringExtra("date_str") ?: ""
+                prefs.edit().putString("selected_date", dateStr).apply()
+                updateAllWidgets(context)
+            }
         }
     }
 }
