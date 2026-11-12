@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dock_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#66000000"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="12dp">
+
+    <!-- Top Drag Handle -->
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="#66FFFFFF"
+        android:layout_marginBottom="6dp" />
+
+    <!-- Month & Year Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/tv_month_year"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="NOVEMBER 2026"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:shadowColor="#80000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btn_prev_month"
+                android:layout_width="32dp"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:text="❮"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="#33FFFFFF" />
+
+            <View
+                android:layout_width="6dp"
+                android:layout_height="1dp" />
+
+            <TextView
+                android:id="@+id/btn_next_month"
+                android:layout_width="32dp"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:text="❯"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="#33FFFFFF" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Days of the Week Header (S M T W T F S) -->
+    <LinearLayout
+        android:id="@+id/row_weekdays"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="7"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Month Dates Grid (All bold dates, today circled) -->
+    <GridLayout
+        android:id="@+id/grid_dates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="7"
+        android:rowCount="6"
+        android:alignmentMode="alignMargins" />
+
+    <!-- Festival Info Banner for Selected/Today Date -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        android:paddingTop="6dp"
+        android:background="#22FFFFFF">
+
+        <TextView
+            android:id="@+id/tv_active_festival"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="No Festival Today"
+            android:textColor="#FFD700"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_active_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="4dp"
+            android:text="Tap any date to check festival details"
+            android:textColor="#DDDDDD"
+            android:textSize="11sp" />
+    </LinearLayout>
+</LinearLayout>
