@@ -4,19 +4,25 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#66000000"
+    android:background="#77000000"
     android:paddingStart="12dp"
     android:paddingEnd="12dp"
-    android:paddingTop="8dp"
     android:paddingBottom="12dp">
 
-    <!-- Top Drag Handle -->
-    <View
-        android:layout_width="36dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:background="#66FFFFFF"
-        android:layout_marginBottom="6dp" />
+    <!-- Draggable Handle Bar Area (Taller touch target) -->
+    <LinearLayout
+        android:id="@+id/drag_handle"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="true">
+
+        <View
+            android:layout_width="48dp"
+            android:layout_height="5dp"
+            android:background="#99FFFFFF" />
+    </LinearLayout>
 
     <!-- Month & Year Header -->
     <RelativeLayout
@@ -79,7 +85,7 @@
         android:weightSum="7"
         android:layout_marginBottom="4dp" />
 
-    <!-- Month Dates Grid (All bold dates, today circled) -->
+    <!-- Month Dates Grid -->
     <GridLayout
         android:id="@+id/grid_dates"
         android:layout_width="match_parent"
@@ -88,7 +94,7 @@
         android:rowCount="6"
         android:alignmentMode="alignMargins" />
 
-    <!-- Festival Info Banner for Selected/Today Date -->
+    <!-- Festival Info Banner -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
