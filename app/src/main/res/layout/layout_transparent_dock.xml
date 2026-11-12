@@ -149,3 +149,19 @@
 
         <TextView
             android:id="@+id/tv_active_festival"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Festival Today"
+            android:textColor="#FFD700"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_active_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap any date to check festival details"
+            android:textColor="#DDDDDD"
+            android:textSize="10sp" />
+    </LinearLayout>
+</LinearLayout>
