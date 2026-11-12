@@ -1,5 +1,6 @@
 package com.example.nepalicalendar
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
 import android.graphics.Color
@@ -9,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.GridLayout
@@ -23,11 +25,13 @@ class OverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: View
+    private lateinit var params: WindowManager.LayoutParams
     private val currentCalendar: Calendar = Calendar.getInstance()
     private val todayCalendar: Calendar = Calendar.getInstance()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -40,7 +44,7 @@ class OverlayService : Service() {
             WindowManager.LayoutParams.TYPE_PHONE
         }
 
-        val params = WindowManager.LayoutParams(
+        params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             layoutParamsType,
@@ -56,6 +60,7 @@ class OverlayService : Service() {
         windowManager.addView(overlayView, params)
         setupWeekdayHeader()
         renderCalendar()
+        setupDragListener()
 
         overlayView.findViewById<TextView>(R.id.btn_prev_month).setOnClickListener {
             currentCalendar.add(Calendar.MONTH, -1)
@@ -65,6 +70,32 @@ class OverlayService : Service() {
         overlayView.findViewById<TextView>(R.id.btn_next_month).setOnClickListener {
             currentCalendar.add(Calendar.MONTH, 1)
             renderCalendar()
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupDragListener() {
+        val dragHandle = overlayView.findViewById<View>(R.id.drag_handle)
+        var initialY = 0
+        var initialTouchY = 0f
+
+        dragHandle.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    initialY = params.y
+                    initialTouchY = event.rawY
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val deltaY = (initialTouchY - event.rawY).toInt()
+                    val screenHeight = resources.displayMetrics.heightPixels
+                    val maxHeight = screenHeight - dpToPx(140)
+                    params.y = (initialY + deltaY).coerceIn(0, maxHeight)
+                    windowManager.updateViewLayout(overlayView, params)
+                    true
+                }
+                else -> false
+            }
         }
     }
 
