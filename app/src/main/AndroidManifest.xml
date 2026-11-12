@@ -2,13 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.nepalicalendar">
 
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
     <application
         android:allowBackup="false"
         android:icon="@android:drawable/ic_menu_my_calendar"
-        android:label="Nepali Cal Overlay"
+        android:label="Nepali Calendar"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
@@ -22,8 +19,16 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".OverlayService"
-            android:exported="false" />
+        <receiver
+            android:name=".NepaliCalendarWidget"
+            android:exported="true"
+            android:label="Nepali Calendar">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/nepali_calendar_widget_info" />
+        </receiver>
     </application>
 </manifest>
